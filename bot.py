@@ -1,5 +1,23 @@
 import asyncio
 import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"NEXUS BOT OK")
+
+    def log_message(self, format, *args):
+        pass
+
+
+def run_health_server():
+    port = int(os.getenv("PORT", "10000"))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server.serve_forever()
 import sqlite3
 from datetime import datetime
 
@@ -1100,6 +1118,7 @@ async def fallback(message: Message):
 # =========================================================
 
 async def main():
+    threading.Thread(target=run_health_server, daemon=True).start()
 
     init_db()
 
